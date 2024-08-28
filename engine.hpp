@@ -30,7 +30,9 @@ void jogo::desenhe(){
         janela->draw(*min->mineradorSprt);  // Assumindo que mineradorSprt é o sprite a ser desenhado
     }
     
-    
+    for (auto& blo : blocos) {
+        janela->draw(*blo->blocoSprt);
+    }
     janela->display();
 
     
@@ -76,11 +78,12 @@ void jogo::eventos(){
             tecla = false;
         }
         
-     //drag and drop minerador  
+         //drag and drop minerador  
+        
+        
         if(evento.type == sf::Event::MouseButtonPressed){
             if(evento.mouseButton.button == sf::Mouse::Left){
                 sf::Vector2i mousePos = sf::Mouse::getPosition(*janela);
-                
                 for (auto& min : mineradores) {
                     if (min->checarMouse(mousePos)) {
                         min->pegando = true;
@@ -102,9 +105,11 @@ void jogo::eventos(){
             }
             
         }
-
+        
         if (evento.type == sf::Event::MouseButtonReleased) {
             // Quando o botão do mouse é solto
+            
+            //mousePos.x > 11 && mousePos.x < 780 && mousePos.y > 11 && mousePos < 190
             if (evento.mouseButton.button == sf::Mouse::Left) {
                 // Solta o minerador
                 for (auto& min : mineradores) {
@@ -116,8 +121,10 @@ void jogo::eventos(){
         
     }
 
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-        sf::Vector2i mousePos = sf::Mouse::getPosition(*janela);
+    sf::Vector2i mousePos = sf::Mouse::getPosition(*janela);
+
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && mousePos.x > 11 && mousePos.x < 780 && mousePos.y > 11 && mousePos.y < 190) {
+        //sf::Vector2i mousePos = sf::Mouse::getPosition(*janela);
         for (auto& min : mineradores) {
             if (min->pegando) {
                 // Atualiza a posição do minerador com a posição do mouse
@@ -130,7 +137,8 @@ void jogo::eventos(){
 }
 
 void jogo::run(){
-
+    
+    gerar();
     while(janela->isOpen()){
         eventos();
         desenhe();
@@ -139,4 +147,17 @@ void jogo::run(){
     }
 }
 
+void jogo::gerar(){
+    ponteiroSprite = std::make_shared<sf::Sprite>();
+
+    ponteiroSprite->setPosition(0,214);//25
+
+    for (int i = 0; i < 26; i++){
+        for(int x = 0; x < 26; x++){
+            criarBlocos("terra",ponteiroSprite->getPosition());
+            ponteiroSprite->setPosition(0+(32*x),214+(32*i));
+        }
+    }
+
+}
 

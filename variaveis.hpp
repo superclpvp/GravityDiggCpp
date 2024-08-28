@@ -54,12 +54,36 @@ public:
 
 
 };
+
+class Bloco{
+public:
+    int ID;
+    float vida;
+    float nivel; 
+    sf::Vector2f cord;
+    std::shared_ptr<sf::Sprite> blocoSprt;
+    sf::Texture blocoTx;
+    std::string tipo;
+
+    Bloco(std::string t,sf::Vector2f p) : tipo(t), cord(p){
+        blocoSprt = std::make_shared<sf::Sprite>();
+
+        if(tipo == "terra"){
+            blocoTx.loadFromFile("./recursos/terra.png");
+            blocoSprt->setTexture(blocoTx);
+        }
+        blocoSprt->setPosition(cord);
+    }
+
+};
+
 class jogo{
 public:
     float scrollSpeed = 20.0f;
     bool teclaPPressionada = false;
     std::vector<std::shared_ptr<minerador>> mineradores; 
-    std::shared_ptr<sf::Sprite> bgSprite;
+    std::vector<std::shared_ptr<Bloco>> blocos;
+    std::shared_ptr<sf::Sprite> bgSprite,ponteiroSprite;
     std::shared_ptr<sf::RenderWindow> janela;
     sf::Texture FundoTxt;
     bool tecla = false;
@@ -68,7 +92,9 @@ public:
     int proximoId = 1;
     sf::View camera;
 
-
+    void criarBlocos(std::string tipoBloco,sf::Vector2f pos){
+        blocos.push_back(std::make_shared<Bloco>(tipoBloco,pos));
+    }
 
 
     void criarMineradores() {
@@ -106,6 +132,7 @@ public:
     void eventos();
     void run();
     void updateCamera();
-    void scrolle(const sf::Event::MouseWheelScrollEvent& event);
+    void gerar();
 };
+
 
