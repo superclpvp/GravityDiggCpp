@@ -7,6 +7,9 @@
 jogo::jogo(){
     
     janela = std::make_shared<sf::RenderWindow>(sf::VideoMode(800,600),"gravity digg cpp");
+    camera.setSize(sf::Vector2f(janela->getSize()));
+    camera.setCenter(400,300);
+    janela->setView(camera);
 
     bgSprite = std::make_shared<sf::Sprite>();
     FundoTxt.loadFromFile("./recursos/fundos/BG1.png");
@@ -27,7 +30,7 @@ void jogo::desenhe(){
         janela->draw(*min->mineradorSprt);  // Assumindo que mineradorSprt é o sprite a ser desenhado
     }
     
-
+    
     janela->display();
 
     
@@ -42,6 +45,24 @@ void jogo::eventos(){
         if(evento.type == sf::Event::Closed){
             janela->close();
         }
+        if (evento.type == sf::Event::MouseWheelScrolled) {
+                std::cout << "Scroll";
+                sf::Vector2f cameraPos = camera.getCenter();
+                if (evento.mouseWheelScroll.delta > 0) {
+                    std::cout << "Scroll Up\n";
+                    // Aumenta o tamanho da visão (zoom out)
+                    if (cameraPos.y > 300){
+                        camera.move(0, -scrollSpeed);  // Move a câmera para cima (scroll up)
+                    }
+                } else if (evento.mouseWheelScroll.delta < 0) {
+                    std::cout << "Scroll Down\n";
+                    // Diminui o tamanho da visão (zoom in)
+                    
+                    camera.move(0, scrollSpeed);  // Move a câmera para baixo (scroll down)
+                    
+                }
+                janela->setView(camera);
+        }
       //crirar minerador -temporario-
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::P)){
             if(!tecla){
@@ -54,11 +75,8 @@ void jogo::eventos(){
         else{
             tecla = false;
         }
-
-     //drag and drop minerador  
-     if(true){
         
-     }
+     //drag and drop minerador  
         if(evento.type == sf::Event::MouseButtonPressed){
             if(evento.mouseButton.button == sf::Mouse::Left){
                 sf::Vector2i mousePos = sf::Mouse::getPosition(*janela);
@@ -82,6 +100,7 @@ void jogo::eventos(){
 
                 }
             }
+            
         }
 
         if (evento.type == sf::Event::MouseButtonReleased) {
@@ -93,6 +112,8 @@ void jogo::eventos(){
                         min->pegando = false;
                         break;
         }}}}
+        
+        
     }
 
     if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
@@ -117,3 +138,5 @@ void jogo::run(){
 
     }
 }
+
+

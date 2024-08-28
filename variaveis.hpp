@@ -56,6 +56,7 @@ public:
 };
 class jogo{
 public:
+    float scrollSpeed = 20.0f;
     bool teclaPPressionada = false;
     std::vector<std::shared_ptr<minerador>> mineradores; 
     std::shared_ptr<sf::Sprite> bgSprite;
@@ -65,6 +66,10 @@ public:
     //std::unordered_map<int , std::shared_ptr<minerador>> mineradores;
     int npa = 0;
     int proximoId = 1;
+    sf::View camera;
+
+
+
 
     void criarMineradores() {
         while (npa > mineradores.size()) {
@@ -100,4 +105,7 @@ public:
     void desenhe();
     void eventos();
     void run();
+    void updateCamera();
+    void scrolle(const sf::Event::MouseWheelScrollEvent& event);
 };
+
