@@ -5,56 +5,6 @@
 #include <iostream>
 #include <random>
 
-class minerador{
-public:
-    bool pegando = false; 
-    sf::Vector2i posMouseQuandoPegado;
-    int ID = 0;
-    float vida = 10;
-    float dano = 1;
-    float elasticidade = 1;
-    bool criado = false;
-    bool gravidade = false;
-    bool animado = false;
-    int frame;
-
-    std::string tipo;
-    sf::Vector2f Mineradorcords;
-    sf::Vector2f Mineradorveloc;
-
-    std::shared_ptr<sf::Sprite> mineradorSprt;
-    sf::Texture mineradorTx;
-
-    bool checarMouse(const sf::Vector2i& mousepos){
-        return mineradorSprt->getGlobalBounds().contains(static_cast<sf::Vector2f>(mousepos));
-    }
-    //na hora de declarar o minerador
-    minerador(
-        int id = 0,
-        sf::Vector2f p = {0.0f, 0.0f},
-        sf::Vector2f v = {0.0f, 0.0f},
-        std::string t = "pa1"
-    ) : ID(id), Mineradorcords(p), Mineradorveloc(v), tipo(t) {
-        mineradorSprt = std::make_shared<sf::Sprite>();
-
-        if(tipo == "pa1") {
-            mineradorTx.loadFromFile("./recursos/pa_1.png");
-            mineradorSprt->setTexture(mineradorTx);
-
-            sf::FloatRect bounds = mineradorSprt->getLocalBounds();
-            mineradorSprt->setOrigin(4, 15);
-
-        }
-        mineradorSprt->setPosition(Mineradorcords);
-    }
-
-   
-    //para ficar facil na hora de fazer - minerador({0,0},{0,0}) posição, velocidade
-
-
-
-};
-
 class Bloco{
 public:
     int ID;
@@ -69,7 +19,7 @@ public:
         blocoSprt = std::make_shared<sf::Sprite>();
 
         if(tipo == "terra"){
-            blocoTx.loadFromFile("./recursos/terra.png");
+            blocoTx.loadFromFile("./recursos/sprite/terra.png");
             blocoSprt->setTexture(blocoTx);
         }
         blocoSprt->setPosition(cord);
@@ -77,8 +27,64 @@ public:
 
 };
 
+class minerador{
+public:
+
+    sf::Vector2f rotacaoVeloc;
+    bool pegando = false; 
+    sf::Vector2i posMouseQuandoPegado;
+    int ID = 0;
+    float vida = 10;
+    float dano = 1;
+    float elasticidade = 0.5f;
+    bool criado = false;
+    bool animado = false;
+    int frame;
+
+    std::string tipo;
+    sf::Vector2f Mineradorcords;
+    sf::Vector2f Mineradorveloc;
+
+    std::shared_ptr<sf::Sprite> mineradorSprt;
+    sf::Texture mineradorTx;
+
+    // Adicione variáveis para o tamanho da janela
+    float janelaLargura;
+    float janelaAltura;
+
+    minerador(
+        int id = 0,
+        sf::Vector2f p = {0.0f, 0.0f},
+        sf::Vector2f v = {0.0f, 0.0f},
+        std::string t = "pa1",
+        float larguraJanela = 800.0f,  // Valor padrão
+        float alturaJanela = 600.0f   // Valor padrão
+    ) : ID(id), Mineradorcords(p), Mineradorveloc(v), tipo(t), janelaLargura(larguraJanela), janelaAltura(alturaJanela) {
+        mineradorSprt = std::make_shared<sf::Sprite>();
+
+        if(tipo == "pa1") {
+            mineradorTx.loadFromFile("./recursos/sprite/pa_1.png");
+            mineradorSprt->setTexture(mineradorTx);
+
+            sf::FloatRect bounds = mineradorSprt->getLocalBounds();
+            mineradorSprt->setOrigin(4, 15);
+        }
+        mineradorSprt->setPosition(Mineradorcords);
+    }
+
+    void fisica(std::vector<std::shared_ptr<Bloco>> blocos);
+
+
+    bool checarMouse(const sf::Vector2i& mousepos){
+        return mineradorSprt->getGlobalBounds().contains(static_cast<sf::Vector2f>(mousepos));
+    }
+};
+
+
+
 class jogo{
 public:
+    bool minerar = false;
     float scrollSpeed = 20.0f;
     bool teclaPPressionada = false;
     std::vector<std::shared_ptr<minerador>> mineradores; 
@@ -133,6 +139,7 @@ public:
     void run();
     void updateCamera();
     void gerar();
+    void RunEngine();
 };
 
 
