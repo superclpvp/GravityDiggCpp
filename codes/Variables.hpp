@@ -1,3 +1,7 @@
+#ifndef VARIABLES_HPP
+#define VARIABLES_HPP
+
+
 #include <string>
 #include <memory>
 #include <SFML/Graphics.hpp>
@@ -36,10 +40,11 @@ public:
     int ID = 0;
     float vida = 10;
     float dano = 1;
-    float elasticidade = 0.5f;
+    float elasticidade = 1.6f;
     bool criado = false;
     bool animado = false;
     int frame;
+    float perdaDeEnergia = 1.0f;
 
     std::string tipo;
     sf::Vector2f Mineradorcords;
@@ -72,8 +77,9 @@ public:
         mineradorSprt->setPosition(Mineradorcords);
     }
 
-    void fisica(std::vector<std::shared_ptr<Bloco>> blocos);
-
+    void fisica(std::vector<std::shared_ptr<Bloco>> blocos, float janelaLargura, float janelaAltura);
+    void verificarColisaoBordas(sf::Vector2f posMinerador, float janelaLargura, float janelaAltura);
+    bool verificarColisaoPrecisa(const sf::Sprite minerador, const sf::Sprite bloco);
 
     bool checarMouse(const sf::Vector2i& mousepos){
         return mineradorSprt->getGlobalBounds().contains(static_cast<sf::Vector2f>(mousepos));
@@ -142,4 +148,4 @@ public:
     void RunEngine();
 };
 
-
+#endif

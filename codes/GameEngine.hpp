@@ -1,6 +1,6 @@
-#include "variaveis.hpp"
+#include "Variables.hpp"
 #include <map>
-
+#include "physicsEngine.hpp"
 #include <memory>
 #include <unordered_map>
 
@@ -47,7 +47,7 @@ void jogo::eventos(){
         if(evento.type == sf::Event::Closed){
             janela->close();
         }
-        if (evento.type == sf::Event::MouseWheelScrolled && !minerar) {
+        if (evento.type == sf::Event::MouseWheelScrolled) {
                 std::cout << "Scroll";
                 sf::Vector2f cameraPos = camera.getCenter();
                 if (evento.mouseWheelScroll.delta > 0) {
@@ -131,6 +131,7 @@ void jogo::eventos(){
             if (min->pegando) {
                 // Atualiza a posição do minerador com a posição do mouse
                 min->mineradorSprt->setPosition(static_cast<sf::Vector2f>(mousePos));
+                min->Mineradorcords = min->mineradorSprt->getPosition();
             }
         }
     }
@@ -154,7 +155,7 @@ void jogo::gerar(){
 
 void jogo::RunEngine(){
     for (auto& min : mineradores) {
-        min->fisica(blocos);  // Aplica a física para cada minerador
+        min->fisica(blocos,800,600);  // Aplica a física para cada minerador
     }
 }
 
@@ -172,60 +173,18 @@ void jogo::run(){
     }
 }
 
-void minerador::fisica(std::vector<std::shared_ptr<Bloco>> blocos) {
-    // Aplicar gravidade
-    float gravidade = 0.01f;
-    Mineradorveloc.y += gravidade;
 
-    // Atualizar a posição do minerador
-    Mineradorcords += Mineradorveloc;
-    mineradorSprt->setPosition(Mineradorcords);
 
-    // Aplicar rotação baseada no vetor de rotação
-    mineradorSprt->rotate(rotacaoVeloc.x * rotacaoVeloc.y);
 
-    // Verificar colisão com blocos
-    for (auto& bloco : blocos) {
-        if (mineradorSprt->getGlobalBounds().intersects(bloco->blocoSprt->getGlobalBounds())) {
-            if (Mineradorveloc.y > 0) {
-                Mineradorveloc.y *= -elasticidade;
-                Mineradorcords.y = bloco->blocoSprt->getPosition().y - mineradorSprt->getGlobalBounds().height;  // Ajusta a posição para não entrar no bloco
-            }
-            if (Mineradorveloc.x != 0) {
-                Mineradorveloc.x *= -elasticidade;
-            }
-        }
-    }
 
-    // Verificar colisão com as bordas da tela
-    sf::Vector2f posMinerador = mineradorSprt->getPosition();
-    float margem = 5.0f;  // Margem para evitar que o minerador fique preso na borda
 
-    if (posMinerador.x < margem) {
-        // Colidiu com a borda esquerda
-        Mineradorveloc.x *= -elasticidade;
-        Mineradorcords.x = margem;
-    } 
-    else if (posMinerador.x + mineradorSprt->getGlobalBounds().width > janelaLargura - margem) {
-        // Colidiu com a borda direita
-        Mineradorveloc.x *= -elasticidade;
-        Mineradorcords.x = janelaLargura - margem - mineradorSprt->getGlobalBounds().width;
-    }
 
-    if (posMinerador.y < margem) {
-        // Colidiu com a borda superior
-        Mineradorveloc.y *= -elasticidade;
-        Mineradorcords.y = margem;
-    } 
-    else if (posMinerador.y + mineradorSprt->getGlobalBounds().height > janelaAltura - margem) {
-        // Colidiu com a borda inferior
-        Mineradorveloc.y *= -elasticidade;
-        Mineradorcords.y = janelaAltura - margem - mineradorSprt->getGlobalBounds().height;
-    }
 
-    // Atualiza a posição do sprite após o ajuste
-    mineradorSprt->setPosition(Mineradorcords);
 
-    // Gradualmente reduzir a rotação para simular desaceleração
-    rotacaoVeloc.y *= 0.98f;  // Desacelera a rotação
-}
+
+
+
+
+
+
+
