@@ -34,29 +34,35 @@ public:
 class minerador{
 public:
 
-    sf::Vector2f rotacaoVeloc;
     bool pegando = false; 
     sf::Vector2i posMouseQuandoPegado;
+
     int ID = 0;
     float vida = 10;
     float dano = 1;
-    float elasticidade = 1.6f;
     bool criado = false;
     bool animado = false;
     int frame;
-    float perdaDeEnergia = 1.0f;
 
+    //textura
     std::string tipo;
-    sf::Vector2f Mineradorcords;
-    sf::Vector2f Mineradorveloc;
-
     std::shared_ptr<sf::Sprite> mineradorSprt;
     sf::Texture mineradorTx;
 
-    // Adicione variáveis para o tamanho da janela
+    // tamanho da janela
     float janelaLargura;
     float janelaAltura;
 
+
+    //fisica
+    sf::Vector2f Mineradorcords;
+    sf::Vector2f Mineradorveloc;
+    sf::Vector2f rotacaoVeloc;
+    float elasticidade = 0.0f;
+
+
+
+    #pragma region funcoes da classe
     minerador(
         int id = 0,
         sf::Vector2f p = {0.0f, 0.0f},
@@ -84,6 +90,7 @@ public:
     bool checarMouse(const sf::Vector2i& mousepos){
         return mineradorSprt->getGlobalBounds().contains(static_cast<sf::Vector2f>(mousepos));
     }
+    #pragma endregion
 };
 
 

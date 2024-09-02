@@ -1,10 +1,36 @@
-all:  compile link run
+# Nome do executável
+TARGET = main
 
-compile:
-	g++ -c ./codes/main.cpp -I"C:\Cpp\bibliotecas\SFML-2.5.1\include" -DSFML_STATIC
-link:
-	g++ main.o -o main -L"C:\Cpp\bibliotecas\SFML-2.5.1\lib" -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lfreetype -lopengl32 -lwinmm -lgdi32  -lsfml-main
-cleam:
-	rm -f main *.o
-run:
-	main.exe
+# Compilador
+CXX = g++
+
+# Diretórios de cabeçalhos e bibliotecas
+INCLUDE_DIR = C:/Cpp/bibliotecas/SFML-2.5.1/include
+LIB_DIR = C:/Cpp/bibliotecas/SFML-2.5.1/lib
+
+# Opções de compilação e linkedição
+CXXFLAGS = -std=c++17 -I$(INCLUDE_DIR) -DSFML_STATIC
+LDFLAGS = -L$(LIB_DIR) -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lfreetype -lopengl32 -lwinmm -lgdi32 -lsfml-main
+
+# Arquivos fonte e objetos
+SRCS = codes/main.cpp codes/bibliotecasExternas/PixelPerfectCollision/Collision.cpp
+OBJS = $(SRCS:.cpp=.o)
+
+# Regra padrão
+all: $(TARGET) run
+
+# Regra para criar o executável
+$(TARGET): $(OBJS)
+	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS)
+
+# Regra para compilar arquivos .cpp em .o
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Limpar arquivos gerados
+clean:
+	del $(TARGET) *.o
+
+# Rodar o executável
+run: $(TARGET)
+	$(TARGET).exe

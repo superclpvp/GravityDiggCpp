@@ -1,8 +1,7 @@
 #include "Variables.hpp"
-#include <map>
 #include "physicsEngine.hpp"
 #include <memory>
-#include <unordered_map>
+
 
 jogo::jogo(){
     
@@ -155,7 +154,7 @@ void jogo::gerar(){
 
 void jogo::RunEngine(){
     for (auto& min : mineradores) {
-        min->fisica(blocos,800,600);  // Aplica a física para cada minerador
+        //min->fisica(blocos,800,600);  // Aplica a física para cada minerador
     }
 }
 
