@@ -38,14 +38,16 @@ float DistanciaAoCentroDeMassa(sf::Vector2f centroDemassa ,std::shared_ptr<sf::S
     float DistanciaPontoMassa = std::sqrt(posicaoCentroDeMassa.x*posicaoCentroDeMassa.x - VetorSuperficie.x* VetorSuperficie.x + posicaoCentroDeMassa.y*posicaoCentroDeMassa.y - VetorSuperficie.y* VetorSuperficie.y);
 
     std::cout<<"DistanciaPontoMassa: "<<DistanciaPontoMassa<<"\n";
+    return DistanciaPontoMassa;
 }
 void minerador::fisica(std::vector<std::shared_ptr<Bloco>> blocos, float janelaLargura, float janelaAltura) {
     
-    sf::Vector2f forca;
+    float forca;
     sf::Vector2f aceleracao;
     sf::Vector2f centroDeGravidade;
     sf::Vector2i cordenadaondeBateu;
     sf::IntRect mineradorRect(mineradorSprt->getTextureRect());
+    float torque;
 
     float gravidade = 0.09f;
 
@@ -53,7 +55,7 @@ void minerador::fisica(std::vector<std::shared_ptr<Bloco>> blocos, float janelaL
 
     Mineradorveloc.y += aceleracao.y;
 
-    forca = Mineradorveloc + aceleracao;
+    forca = massa * aceleracao.y;
 
     centroDeGravidade.x = (mineradorRect.left + mineradorRect.width /2);
     centroDeGravidade.y = (mineradorRect.top + mineradorRect.height /2);
@@ -66,14 +68,19 @@ void minerador::fisica(std::vector<std::shared_ptr<Bloco>> blocos, float janelaL
 
             //std::cout<<"2";//saida para saber se teve alteração
             sf::Vector2f normal = calularNormal(mineradorSprt,bloco->blocoSprt);
-            float anal = DistanciaAoCentroDeMassa(centroDeGravidade,mineradorSprt,bloco->blocoSprt);
+            float distanciaPG = DistanciaAoCentroDeMassa(centroDeGravidade,mineradorSprt,bloco->blocoSprt);
             
+            torque = forca * distanciaPG;
+
             Mineradorveloc.y = Mineradorveloc.y * -elasticidade * (Mineradorveloc.y * normal.y) * normal.y;
             Mineradorveloc.x = Mineradorveloc.x * -elasticidade * (Mineradorveloc.x * normal.x) * normal.x;
 
-            Mineradorveloc.y = Mineradorveloc.y * (1-FatorAtrito);
-            Mineradorveloc.x = Mineradorveloc.x * (1-FatorAtrito);
+            float forcaAtrito = forca * FatorAtrito;
+
+            Mineradorveloc.y = Mineradorveloc.y - (forcaAtrito/massa);
+            Mineradorveloc.x = Mineradorveloc.x - (forcaAtrito/massa);
             
+            if(Mineradorveloc.x > -0.1 && Mineradorveloc.x < 0.1){Mineradorveloc.x = 0;}
             //std::cout<<"minerador y: "<<Mineradorveloc.y<< " normal y: "<<normal.y<<"\n";
         }
 
