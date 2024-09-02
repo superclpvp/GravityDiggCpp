@@ -12,8 +12,8 @@ LIB_DIR = C:/Cpp/bibliotecas/SFML-2.5.1/lib
 CXXFLAGS = -std=c++17 -I$(INCLUDE_DIR) -DSFML_STATIC
 LDFLAGS = -L$(LIB_DIR) -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lfreetype -lopengl32 -lwinmm -lgdi32 -lsfml-main
 
-# Arquivos fonte e objetos
-SRCS = main.cpp codes/bibliotecasExternas/PixelPerfectCollision/Collision.cpp
+# Arquivos fonte e objetos 
+SRCS = main.cpp codes/bibliotecasExternas/PixelPerfectCollision/Collision.cpp 
 OBJS = $(SRCS:.cpp=.o)
 
 # Regra padrão

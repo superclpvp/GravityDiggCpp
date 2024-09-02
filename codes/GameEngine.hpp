@@ -6,6 +6,7 @@
 jogo::jogo(){
     
     janela = std::make_shared<sf::RenderWindow>(sf::VideoMode(800,600),"gravity digg cpp");
+    janela->setFramerateLimit(60);
     camera.setSize(sf::Vector2f(janela->getSize()));
     camera.setCenter(400,300);
     janela->setView(camera);
@@ -153,7 +154,9 @@ void jogo::gerar(){
 }
 
 void jogo::RunEngine(){
+    
     for (auto& min : mineradores) {
+
         min->fisica(blocos,800,600);  // Aplica a física para cada minerador
     }
 }

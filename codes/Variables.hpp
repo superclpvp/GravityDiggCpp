@@ -8,6 +8,8 @@
 #include <vector>
 #include <iostream>
 #include <random>
+#include "bibliotecasExternas/PixelPerfectCollision/Collision.hpp"
+
 
 class Bloco{
 public:
@@ -57,9 +59,11 @@ public:
     //fisica
     sf::Vector2f Mineradorcords;
     sf::Vector2f Mineradorveloc;
-    sf::Vector2f rotacaoVeloc;
-    float elasticidade = 0.0f;
 
+    sf::Vector2f rotacaoVeloc;
+    float massa = 1;
+    float elasticidade = 0.4f;
+    float FatorAtrito = 0.55f;
 
 
     #pragma region funcoes da classe
