@@ -3,6 +3,7 @@
 #include <memory>
 
 
+
 jogo::jogo(){
     
     janela = std::make_shared<sf::RenderWindow>(sf::VideoMode(800,600),"gravity digg cpp");
@@ -66,19 +67,6 @@ void jogo::eventos(){
                 janela->setView(camera);
         }
         
-        //crirar minerador -temporario-
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::P) && !minerar){
-            if(!tecla){
-                criarMineradores();
-                tecla = true;
-                npa++;
-                std::cout<<"p \n";
-            }
-        }
-        else{
-            tecla = false;
-        }
-        
         //drag and drop minerador  
         if(evento.type == sf::Event::MouseButtonPressed && !minerar){
             if(evento.mouseButton.button == sf::Mouse::Left){
@@ -118,8 +106,42 @@ void jogo::eventos(){
         }}}}
         
         //iniciar fisica
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !minerar){
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !minerar && !tecla){
+                std::random_device rd;
+                std::mt19937 gen(rd());
+                std::uniform_int_distribution<> distrib(0, 180);
+            for (auto& min : mineradores) {
+                min->inicialCords = min->mineradorSprt->getPosition();
+                min->Mineradorcords = min->inicialCords;
+                min->Mineradorveloc = {0,0};
+                min->mineradorSprt->setRotation(distrib(gen));
+                min->velocidadeAngular =  min->mineradorSprt->getRotation();
+                std::cout<<"iniciar \n";
+            }
+
             minerar = true;
+            tecla = true;
+        }
+        //reiniciar
+        else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && minerar && !tecla){
+            minerar = false;
+            for (auto& min : mineradores) {
+                min->ResetMinerador();
+                std::cout<<"sair \n";
+            }
+            tecla = true;
+        }
+        //crirar minerador -temporario-
+        else if(sf::Keyboard::isKeyPressed(sf::Keyboard::P) && !minerar && !tecla){
+            if(!tecla){
+                criarMineradores();
+                tecla = true;
+                npa++;
+                std::cout<<"p \n";
+            }
+        }
+        else{
+            tecla = false;
         }
     }
 
@@ -143,34 +165,38 @@ void jogo::gerar(){
     ponteiroSprite = std::make_shared<sf::Sprite>();
 
     ponteiroSprite->setPosition(0,214);//25
-
+    int id = 1;
     for (int i = 0; i < 13; i++){
         for(int x = 0; x < 13; x++){
-            criarBlocos("terra",ponteiroSprite->getPosition());
+            criarBlocos("terra",ponteiroSprite->getPosition(),id);
             ponteiroSprite->setPosition(0+(64*x),214+(64*i));
+            id++;
         }
     }
 
 }
 
-void jogo::RunEngine(){
-    
-    for (auto& min : mineradores) {
+void jogo::RunEngine(sf::Time deltaTime){
 
-        min->fisica(blocos,800,600);  // Aplica a física para cada minerador
-    }
+    fisica(blocos,800,600,deltaTime);
+    
 }
 
 void jogo::run(){
-    
+    sf::Time deltaTime;
+    sf::Time elapsedTime;
+
     gerar();
 
     while(janela->isOpen()){
+        sf::Time frameTime = clock.restart();  
+        deltaTime = frameTime;
+
         eventos();
         desenhe();
         
         if(minerar){
-            RunEngine();
+            RunEngine(deltaTime);
         }
     }
 }

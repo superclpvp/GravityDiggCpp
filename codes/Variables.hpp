@@ -9,19 +9,21 @@
 #include <iostream>
 #include <random>
 #include "bibliotecasExternas/PixelPerfectCollision/Collision.hpp"
+#include <chrono>
+
 
 
 class Bloco{
 public:
     int ID;
-    float vida;
+    float vida = 3;
     float nivel; 
     sf::Vector2f cord;
     std::shared_ptr<sf::Sprite> blocoSprt;
     sf::Texture blocoTx;
     std::string tipo;
 
-    Bloco(std::string t,sf::Vector2f p) : tipo(t), cord(p){
+    Bloco(std::string t,sf::Vector2f p, int id) : tipo(t), cord(p),ID(id){
         blocoSprt = std::make_shared<sf::Sprite>();
 
         if(tipo == "terra"){
@@ -29,6 +31,15 @@ public:
             blocoSprt->setTexture(blocoTx);
         }
         blocoSprt->setPosition(cord);
+    }
+
+    bool verificarVida(){
+        if(vida <= 0){
+            return true;
+        }
+        else{
+            return false;
+        }
     }
 
 };
@@ -45,6 +56,8 @@ public:
     bool criado = false;
     bool animado = false;
     int frame;
+    bool botao;
+    float velocidadeAngular = 0;
 
     //textura
     std::string tipo;
@@ -57,13 +70,14 @@ public:
 
 
     //fisica
+    sf::Vector2f inicialCords;
     sf::Vector2f Mineradorcords;
     sf::Vector2f Mineradorveloc;
     int tempo = 0;
 
     sf::Vector2f rotacaoVeloc;
     float massa = 10;
-    float elasticidade = 1.0f;
+    float elasticidade = 0.9f;
     float FatorAtrito = 0.5f;
 
 
@@ -88,12 +102,15 @@ public:
         mineradorSprt->setPosition(Mineradorcords);
     }
 
-    void fisica(std::vector<std::shared_ptr<Bloco>> blocos, float janelaLargura, float janelaAltura);
     void verificarColisaoBordas(sf::Vector2f posMinerador, float janelaLargura, float janelaAltura);
     bool verificarColisaoPrecisa(const sf::Sprite minerador, const sf::Sprite bloco);
 
     bool checarMouse(const sf::Vector2i& mousepos){
         return mineradorSprt->getGlobalBounds().contains(static_cast<sf::Vector2f>(mousepos));
+    }
+
+    void ResetMinerador(){
+        mineradorSprt->setPosition(inicialCords);
     }
     #pragma endregion
 };
@@ -115,11 +132,28 @@ public:
     int npa = 0;
     int proximoId = 1;
     sf::View camera;
+    sf::Clock clock;
 
-    void criarBlocos(std::string tipoBloco,sf::Vector2f pos){
-        blocos.push_back(std::make_shared<Bloco>(tipoBloco,pos));
+
+    void criarBlocos(std::string tipoBloco,sf::Vector2f pos,int id){
+        blocos.push_back(std::make_shared<Bloco>(tipoBloco,pos,id));
     }
+    void destruirBlocos(int id){
+        std::cout << "Tentando destruir bloco com ID: " << id << "\n";
+        auto it = std::remove_if(blocos.begin(), blocos.end(),
+            [id](const std::shared_ptr<Bloco>& min) {
+                return min->ID == id;
+            });
 
+        if (it != blocos.end()) {
+            blocos.erase(it, blocos.end());
+            npa--;
+            std::cout << "bloco destruido\n";
+        } else {
+            std::cout << "bloco não encontrado\n";
+        }
+
+    }
 
     void criarMineradores() {
         while (npa > mineradores.size()) {
@@ -157,7 +191,9 @@ public:
     void run();
     void updateCamera();
     void gerar();
-    void RunEngine();
+    void RunEngine(sf::Time deltaTime);
+    void fisica(std::vector<std::shared_ptr<Bloco>> blocos, float janelaLargura, float janelaAltura,sf::Time deltaTime);
+
 };
 
 #endif
