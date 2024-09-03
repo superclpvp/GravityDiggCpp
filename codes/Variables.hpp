@@ -59,11 +59,12 @@ public:
     //fisica
     sf::Vector2f Mineradorcords;
     sf::Vector2f Mineradorveloc;
+    int tempo = 0;
 
     sf::Vector2f rotacaoVeloc;
-    float massa = 1;
-    float elasticidade = 0.3f;
-    float FatorAtrito = 0.9f;
+    float massa = 10;
+    float elasticidade = 1.0f;
+    float FatorAtrito = 0.5f;
 
 
     #pragma region funcoes da classe
