@@ -114,8 +114,9 @@ void jogo::eventos(){
                 min->inicialCords = min->mineradorSprt->getPosition();
                 min->Mineradorcords = min->inicialCords;
                 min->Mineradorveloc = {0,0};
-                min->mineradorSprt->setRotation(distrib(gen));
+                //min->mineradorSprt->setRotation(distrib(gen));
                 min->velocidadeAngular =  min->mineradorSprt->getRotation();
+                min->parar = false;
                 std::cout<<"iniciar \n";
             }
 
@@ -133,12 +134,10 @@ void jogo::eventos(){
         }
         //crirar minerador -temporario-
         else if(sf::Keyboard::isKeyPressed(sf::Keyboard::P) && !minerar && !tecla){
-            if(!tecla){
-                criarMineradores();
-                tecla = true;
-                npa++;
-                std::cout<<"p \n";
-            }
+            criarMineradores();  
+            npa++;
+            std::cout<<"p \n";
+            tecla = true;
         }
         else{
             tecla = false;

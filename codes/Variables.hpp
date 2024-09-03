@@ -77,8 +77,10 @@ public:
 
     sf::Vector2f rotacaoVeloc;
     float massa = 10;
-    float elasticidade = 0.9f;
-    float FatorAtrito = 0.5f;
+    float elasticidade = 0.5f;
+    float FatorAtrito = 0.1f;
+    bool parar = false;
+    float rotacao ;
 
 
     #pragma region funcoes da classe
