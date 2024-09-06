@@ -1,8 +1,5 @@
 #include "Variables.hpp"
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <math.h>
+
 
 
 /*
@@ -29,6 +26,8 @@ sf::Vector2f calularNormal(std::shared_ptr<sf::Sprite> Sprt1,std::shared_ptr<sf:
     if(normal.y >= 0){normal.y = 1;} else if (normal.y < 0) {normal.y = -1;}
     if(normal.x >= 0){normal.x = 1;} else if (normal.x < 0) {normal.x = -1;}
     
+    std::cout<<"normalX: "<<normal.x<<" normalY: "<<normal.y<<"\n";
+
     return normal;
 }
 float DistanciaAoCentroDeMassa(sf::Vector2f centroDemassa ,std::shared_ptr<sf::Sprite> Sprt1,std::shared_ptr<sf::Sprite> Sprt2){
@@ -43,35 +42,28 @@ float DistanciaAoCentroDeMassa(sf::Vector2f centroDemassa ,std::shared_ptr<sf::S
     return DistanciaPontoMassa;
 }
 
-void jogo::fisica(std::vector<std::shared_ptr<Bloco>> blocos, float janelaLargura, float janelaAltura,sf::Time deltaTime) {
-    float deltaTimeSeconds = deltaTime.asSeconds();
+void jogo::fisica(std::vector<std::shared_ptr<Bloco>> blocos, float janelaLargura, float janelaAltura) {
+    
     for (auto& min : mineradores) {
-
+        srand(time(0));
         sf::Vector2f aceleracao;
-        sf::Vector2f centroDeGravidade;
+        sf::Vector2f CentroImagem;
         sf::Vector2i cordenadaondeBateu;
         sf::IntRect mineradorRect(min->mineradorSprt->getTextureRect());
 
-
-        float forca;
-        float torque;
-        float resistenciadoAR = 0.01;
-        float distanciaPG;
-        float AceleracaoAngular;
         float gravidade = 0.09f;
-        float velocidadeMaxima = 5;
-        float momentoInercia = 0.083 * min->massa * (54*54);
+        float FatorAtrito = 0.05f;
 
-        aceleracao.y = gravidade;
+        
+        
 
-        min->Mineradorveloc.y += aceleracao.y;
+        min->Mineradorveloc.y += gravidade;
 
-        centroDeGravidade.x = (mineradorRect.left + mineradorRect.width /2);
-        centroDeGravidade.y = (mineradorRect.top + mineradorRect.height /2);
+        CentroImagem.x = (mineradorRect.left + mineradorRect.width /2);
+        CentroImagem.y = (mineradorRect.top + mineradorRect.height /2);
 
-        min->mineradorSprt->setOrigin(centroDeGravidade);
-  
-        min->mineradorSprt->setRotation(min->rotacao);
+        min->mineradorSprt->setOrigin(CentroImagem);
+
 
         for(auto& bloco : blocos){
             if(Collision::PixelPerfectTest(*min->mineradorSprt,*bloco->blocoSprt)){
@@ -85,60 +77,23 @@ void jogo::fisica(std::vector<std::shared_ptr<Bloco>> blocos, float janelaLargur
 
                 //std::cout<<"2";//saida para saber se teve alteração
                 sf::Vector2f normal = calularNormal(min->mineradorSprt,bloco->blocoSprt);
-                distanciaPG = DistanciaAoCentroDeMassa(centroDeGravidade,min->mineradorSprt,bloco->blocoSprt);
-                min->tempo = 0;
-
-            
-                min->Mineradorveloc.y *= (1-min->FatorAtrito);
-                min->Mineradorveloc.x *= (1-min->FatorAtrito);
-                std::cout<<"velocidadeAtritada: "<<min->Mineradorveloc.y<<"\n";
 
                 
-
-                min->Mineradorveloc.y *= -min->elasticidade * (min->Mineradorveloc.y * normal.y) * normal.y;
-                min->Mineradorveloc.x *= (-min->elasticidade * (min->Mineradorveloc.x * normal.x) * normal.x);
-                std::cout<<"velocidadepos: "<<min->Mineradorveloc.y<<"\n";
-                torque = forca * distanciaPG;
+                min->Mineradorveloc.y *= (min->elasticidade*(normal.y));
+                min->Mineradorveloc.x *= (min->elasticidade*(normal.x));
 
                 
-
-                AceleracaoAngular = (torque/momentoInercia);
-                            
-                min->velocidadeAngular -= AceleracaoAngular;
-                min->Mineradorveloc.x +=AceleracaoAngular + (0.5 * ((rand() % 2 == 0) ? 1 : -1));
-                min->Mineradorveloc.y +=AceleracaoAngular;
-
-
-                //min->Mineradorveloc.y = 0;
-                std::cout<<"dano1 "<<"\n";
-                if(min->Mineradorveloc.y < -0.1 or min->Mineradorveloc.y > 0.1){
-                    std::cout<<"dano2s "<<"\n";
-                    bloco->vida -= min->dano;
-                    if (bloco->vida <= 0){
-                        min->Mineradorveloc.y *= -1.0f * (min->Mineradorveloc.y * normal.y) * normal.y;
-                        min->Mineradorveloc.x *= -1.0f * (min->Mineradorveloc.x * normal.x) * normal.x;
-                        std::cout<<"destroi: "<<min->Mineradorveloc.y<<"\n";
-                        destruirBlocos(bloco->ID);
-                    }
-                }
-
-                if(min->Mineradorveloc.x > -0.1 && min->Mineradorveloc.x < 0.1){min->Mineradorveloc.x = 0;}
-                if(min->Mineradorveloc.y < -velocidadeMaxima) {min->Mineradorveloc.y = -velocidadeMaxima;} else if(min->Mineradorveloc.y > velocidadeMaxima ){min->Mineradorveloc.y = velocidadeMaxima;}
-
-            
+                float aleatorio = ((rand() % 501) / 1000.f) * ((rand() % 2 == 0) ? 1 : -1);
+                
+                min->Mineradorveloc.x += aleatorio;
+                
+                std::cout<<"velocY: "<<min->Mineradorveloc.y<<" velocX: "<<aleatorio<<"\n";
                 
             }
             
 
         }
 
-
-        forca = min->massa * min->Mineradorveloc.x; 
-        //min->rotacao = min->mineradorSprt->getRotation();
-        //min->rotacao += (min->velocidadeAngular * deltaTimeSeconds) + 0.5* AceleracaoAngular * (deltaTimeSeconds * deltaTimeSeconds);   
-        
-        float ValorAbsolutoVelocidadeY = std::abs(min->Mineradorveloc.y);
-        min->Mineradorveloc.y *= (1-resistenciadoAR);
 
         min->mineradorSprt->move(min->Mineradorveloc);
     } 

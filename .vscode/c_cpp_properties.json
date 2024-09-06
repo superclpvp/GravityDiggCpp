@@ -4,7 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/Cpp/bibliotecas/SFML-2.5.1/include"
+                "codes/lib/SFML/include",
+                "codes/lib/box2d/include",
+                "codes/lib/nlohmann/include/nlohmann"
             ],
             "defines": [
                 "_DEBUG",
