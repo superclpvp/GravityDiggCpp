@@ -66,6 +66,7 @@ public:
     float PPM = 0.1;
     float MPP = 1/PPM;
     float pi = 3.14159265;
+    bool desenharFisica =false;
 
     int index = 0;
     /* #endregion */
@@ -79,6 +80,9 @@ public:
     void criaRetangulo(float x, float y, float w, float h, bool dinamico);
     b2Body* criarPoligono(std::string tipo, bool dinamico,int x, int y);
     void criarOjeto(std::string tipo,float x, float y);
+    void gerarTerreno();
+    void drawPolygon(const b2PolygonShape& shape, const b2Body* body);
+
     //b2BodyDef createModel(std::string tipo,bool estaticoDinamico = false,float x , float y);
     /* #endregion*/
 

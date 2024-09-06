@@ -59,9 +59,23 @@ void Engine::draw()
     janela->clear(sf::Color::Black);
     janela->draw(*bgSprite);
 
-    for(auto obj : objetos){
-        janela->draw(*obj->objSprite);
 
+    for (auto obj : objetos) {
+        janela->draw(*obj->objSprite);
+        if(desenharFisica){
+        // Itera sobre os fixtures do corpo
+        for (b2Fixture* fixture = obj->body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
+            const b2Shape* shape = fixture->GetShape();
+            if (shape->GetType() == b2Shape::e_polygon) {
+                const b2PolygonShape* polygonShape = dynamic_cast<const b2PolygonShape*>(shape);
+                if (polygonShape) {
+                    drawPolygon(*polygonShape, obj->body);
+                } else {
+                    std::cout << "Failed to cast shape to b2PolygonShape\n";
+                }
+            }
+        }
+        }
     }
     
 
@@ -98,6 +112,13 @@ void Engine::events() {
             criarOjeto("pa_1", 100, 100);
             std::cout << "A\n";
         }
+        if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::F && !desenharFisica) {
+            desenharFisica = true;
+        }
+        else if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::F && desenharFisica) {
+            desenharFisica = false;
+        }
+        
     }
 }
 //Fisica e afins
@@ -107,9 +128,12 @@ void Engine::EngineRUN() {
     
 
     for(auto obj : objetos) {
+        
         b2Vec2 pos = obj->body->GetPosition();
         float rot = obj->body->GetAngle();
-        rot = rot * 180/pi;
+        sf::FloatRect bounds = obj->objSprite->getLocalBounds();
+        obj->objSprite->setOrigin(bounds.width/2,bounds.height/2);
+        rot = (rot * 180/pi) + 180;
         obj->objSprite->setRotation(rot);
         sf::Vector2f posP(pos.x * MPP, pos.y * MPP);
         obj->objSprite->setPosition(posP);
@@ -119,9 +143,27 @@ void Engine::EngineRUN() {
 
 }
 
+
+void Engine::gerarTerreno(){
+    
+    std::shared_ptr<sf::Vector2f> ponteiro = std::make_shared<sf::Vector2f>();
+
+    ponteiro->y = 217;
+
+    for(int y = -1; y< 100; y++){
+        for(int x = -1; x < 13; x++){
+            ponteiro->y = 284 + (64*y);
+            ponteiro->x = 64 + (64*x);
+            criarOjeto("terra",ponteiro->x,ponteiro->y);
+
+        }
+    }
+}
+
 //função que junta tudo para rodar
 void Engine::run()
 {
+    gerarTerreno();
     clock.restart();  
     LastTime = 0;
     float accumulator = 0.0f;
@@ -135,7 +177,7 @@ void Engine::run()
         fps = (0.96 / deltaTime);
 
 
-
+        std::cout<<"fps " << fps<<"\n"; 
         
         EngineRUN();
         draw();
@@ -196,8 +238,8 @@ b2Body* Engine::criarPoligono(std::string tipo, bool dinamico, int x, int y) {
                 for (size_t i = 0; i < coordenadas.size(); i += 2) {
                     float x = std::stof(coordenadas[i]);
                     float y = std::stof(coordenadas[i + 1]);
-                    x *=PPM;
-                    y *=PPM;
+                    x *= PPM;
+                    y *= PPM;
                     std::cout << "(" << x << ", " << y << ") ";
                     vertices.push_back(b2Vec2(x, y));
                 }
@@ -251,20 +293,46 @@ void Engine::criarOjeto(std::string tipo,float x, float y){
         index++;
         objetos.push_back(OBJ);
     }
+    else if (tipo == "terra")
+    {
+        std::shared_ptr<Objeto> OBJ;
+        sf::Vector2f pos(x,y);
+        OBJ = std::make_shared<Objeto>(pos);
+
+        OBJ->tipo = tipo;
+        OBJ->objTexture.loadFromFile("./recursos/textures/objects/sprite/terra.png");
+        OBJ->objSprite->setTexture(OBJ->objTexture);
+        OBJ->ID = index + 1;
+        OBJ->bodyIndex = OBJ->ID -1;
+
+        OBJ->body = criarPoligono(tipo,false,x,y);
+
+
+        index++;
+        objetos.push_back(OBJ);
+    }
+    
     else{
         std::cout<< "tipo não encontrado" <<"\n";
     }
 
 }
 
+void Engine::drawPolygon(const b2PolygonShape& shape, const b2Body* body) {
+    sf::VertexArray outline(sf::LineStrip);
 
+    // Itera sobre os vértices do polígono, sem adicionar o último vértice
+    for (int32 i = 0; i < shape.m_count; ++i) {
+        // Pega o vértice local do shape e transforma para posição global
+        b2Vec2 worldVertex = body->GetWorldPoint(shape.m_vertices[i]);
 
+        // Converte as coordenadas de Box2D (metros) para SFML (pixels)
+        sf::Vector2f position(worldVertex.x * MPP, worldVertex.y * MPP);
 
+        // Adiciona o vértice ao contorno
+        outline.append(sf::Vertex(position, sf::Color::Red)); // Cor do contorno
+    }
 
-
-
-
-
-
-
-
+    // Desenha o contorno na janela sem adicionar o primeiro vértice novamente
+    janela->draw(outline);
+}
