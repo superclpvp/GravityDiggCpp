@@ -98,13 +98,21 @@ void Engine::events() {
             sf::Vector2f cameraPos = camera.getCenter();
             if (evento.mouseWheelScroll.delta > 0) {
                 std::cout << "Scroll Up\n";
-                if (cameraPos.y > 300) {
+                if (cameraPos.y > -300) {
                     camera.move(0, -scrollSpeed);
                 }
             } else if (evento.mouseWheelScroll.delta < 0) {
                 std::cout << "Scroll Down\n";
                 camera.move(0, scrollSpeed);
             }
+            janela->setView(camera);
+        }
+        if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::Left) {
+            camera.move(32,0);
+            janela->setView(camera);
+        }
+        if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::Right) {
+            camera.move(-32,0);
             janela->setView(camera);
         }
 
@@ -147,16 +155,33 @@ void Engine::EngineRUN() {
 void Engine::gerarTerreno(){
     
     std::shared_ptr<sf::Vector2f> ponteiro = std::make_shared<sf::Vector2f>();
+    ponteiro->x = -320;
+    ponteiro->y = -32;
+    for(int i = 0; i<14 ;i++){
+        ponteiro->x = 32 + (64*i);
+        criarOjeto("Blocker",ponteiro->x,ponteiro->y);
+    }
+    for(int y = 0; y< 10; y++){
+        ponteiro->x = -32;
+        criarOjeto("Blocker",ponteiro->x,ponteiro->y);
+        ponteiro->x = 832;
+        criarOjeto("Blocker",ponteiro->x,ponteiro->y);
+        ponteiro->y = 0 + (64*y);
+    }
 
-    ponteiro->y = 217;
+    ponteiro->y = 280;
 
-    for(int y = -1; y< 100; y++){
-        for(int x = -1; x < 13; x++){
-            ponteiro->y = 284 + (64*y);
-            ponteiro->x = 64 + (64*x);
+    for(int y = 0; y< 150; y++){
+        ponteiro->x = -32;
+        criarOjeto("Blocker",ponteiro->x,ponteiro->y);
+        for(int x = -1; x < 14; x++){
+            ponteiro->y = 215 + (64*y);
+            ponteiro->x = 32 + (64*x);
             criarOjeto("terra",ponteiro->x,ponteiro->y);
 
         }
+        ponteiro->x = 832;
+        criarOjeto("Blocker",ponteiro->x,ponteiro->y);
     }
 }
 
@@ -301,6 +326,24 @@ void Engine::criarOjeto(std::string tipo,float x, float y){
 
         OBJ->tipo = tipo;
         OBJ->objTexture.loadFromFile("./recursos/textures/objects/sprite/terra.png");
+        OBJ->objSprite->setTexture(OBJ->objTexture);
+        OBJ->ID = index + 1;
+        OBJ->bodyIndex = OBJ->ID -1;
+
+        OBJ->body = criarPoligono(tipo,false,x,y);
+
+
+        index++;
+        objetos.push_back(OBJ);
+    }
+    else if (tipo == "Blocker")
+    {
+        std::shared_ptr<Objeto> OBJ;
+        sf::Vector2f pos(x,y);
+        OBJ = std::make_shared<Objeto>(pos);
+
+        OBJ->tipo = tipo;
+        OBJ->objTexture.loadFromFile("./recursos/textures/objects/sprite/Blocker.png");
         OBJ->objSprite->setTexture(OBJ->objTexture);
         OBJ->ID = index + 1;
         OBJ->bodyIndex = OBJ->ID -1;
