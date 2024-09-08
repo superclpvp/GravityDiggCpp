@@ -56,6 +56,7 @@ public:
     float scrollSpeed = 20.0f;
     bool tecla = false;
     bool minerar = false;
+    float maxDown = 460;
 
     //fisica BOX2D
     std::shared_ptr<b2World> mundo;
@@ -63,7 +64,7 @@ public:
     float deltaTime;
     float LastTime = 0;
     double fps;
-    float PPM = 0.1;
+    float PPM = 0.05;
     float MPP = 1/PPM;
     float pi = 3.14159265;
     bool desenharFisica =false;

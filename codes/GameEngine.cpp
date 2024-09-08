@@ -98,14 +98,17 @@ void Engine::events() {
             sf::Vector2f cameraPos = camera.getCenter();
             if (evento.mouseWheelScroll.delta > 0) {
                 std::cout << "Scroll Up\n";
-                if (cameraPos.y > -300) {
+                if (cameraPos.y > 300) {
                     camera.move(0, -scrollSpeed);
                 }
             } else if (evento.mouseWheelScroll.delta < 0) {
                 std::cout << "Scroll Down\n";
-                camera.move(0, scrollSpeed);
+                if (cameraPos.y < maxDown) {
+                    camera.move(0, scrollSpeed);
+                }
             }
             janela->setView(camera);
+            std::cout<<"pos " << cameraPos.y  <<"\n"; 
         }
         if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::Left) {
             camera.move(32,0);
@@ -145,6 +148,8 @@ void Engine::EngineRUN() {
         obj->objSprite->setRotation(rot);
         sf::Vector2f posP(pos.x * MPP, pos.y * MPP);
         obj->objSprite->setPosition(posP);
+
+        
     }
 
     mundo->Step(deltaTime, 1,1);
@@ -153,6 +158,7 @@ void Engine::EngineRUN() {
 
 
 void Engine::gerarTerreno(){
+    
     
     std::shared_ptr<sf::Vector2f> ponteiro = std::make_shared<sf::Vector2f>();
     ponteiro->x = -320;
@@ -171,7 +177,7 @@ void Engine::gerarTerreno(){
 
     ponteiro->y = 280;
 
-    for(int y = 0; y< 150; y++){
+    for(int y = 0; y< 10; y++){
         ponteiro->x = -32;
         criarOjeto("Blocker",ponteiro->x,ponteiro->y);
         for(int x = -1; x < 14; x++){
@@ -202,7 +208,7 @@ void Engine::run()
         fps = (0.96 / deltaTime);
 
 
-        std::cout<<"fps " << fps<<"\n"; 
+        //std::cout<<"fps " << fps<<"\n"; 
         
         EngineRUN();
         draw();
@@ -313,7 +319,6 @@ void Engine::criarOjeto(std::string tipo,float x, float y){
         OBJ->bodyIndex = OBJ->ID -1;
 
         OBJ->body = criarPoligono(tipo,true,x,y);
-
 
         index++;
         objetos.push_back(OBJ);
