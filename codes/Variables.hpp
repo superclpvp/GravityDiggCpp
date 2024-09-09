@@ -14,6 +14,7 @@
 #include "nlohmann/json.hpp"
 #include <fstream>
 #include <sstream>
+#include "lib/noise/FastNoiseLite.h"
 
 class Objeto{
 public:
@@ -56,7 +57,12 @@ public:
     float scrollSpeed = 20.0f;
     bool tecla = false;
     bool minerar = false;
-    float maxDown = 460;
+    float maxDown = 46000;
+    int altura = 150;
+    int larg = 15;
+    int seed = 2850192;
+
+    std::vector<std::vector<int>> MatrizTerreno;
 
     //fisica BOX2D
     std::shared_ptr<b2World> mundo;
@@ -78,11 +84,12 @@ public:
     void events();
     void run();
     void EngineRUN();
-    void criaRetangulo(float x, float y, float w, float h, bool dinamico);
+    b2Body* criaRetangulo(float x, float y, float w, float h, bool dinamico);
     b2Body* criarPoligono(std::string tipo, bool dinamico,int x, int y);
     void criarOjeto(std::string tipo,float x, float y);
     void gerarTerreno();
     void drawPolygon(const b2PolygonShape& shape, const b2Body* body);
+    void aumentarMapa(int tamanho);
 
     //b2BodyDef createModel(std::string tipo,bool estaticoDinamico = false,float x , float y);
     /* #endregion*/

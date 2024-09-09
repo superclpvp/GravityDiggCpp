@@ -49,6 +49,7 @@ Engine::Engine()
     b2Vec2 grav(0,10);
     mundo = std::make_shared<b2World>(grav);
     /*#endregion*/
+    MatrizTerreno =  std::vector<std::vector<int>>(altura, std::vector<int>(larg, 0));
 
 }
 
@@ -132,11 +133,9 @@ void Engine::events() {
         
     }
 }
+
 //Fisica e afins
-
 void Engine::EngineRUN() {
-
-    
 
     for(auto obj : objetos) {
         
@@ -156,11 +155,62 @@ void Engine::EngineRUN() {
 
 }
 
-
+//gerar o terreno base
 void Engine::gerarTerreno(){
-    
-    
     std::shared_ptr<sf::Vector2f> ponteiro = std::make_shared<sf::Vector2f>();
+    srand(static_cast<unsigned>(time(0))); 
+    float limiar = 0.1f;
+    FastNoiseLite noise;
+    noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
+    noise.SetFrequency(0.1f);
+    noise.SetSeed(seed);
+
+
+    for (int y = 0; y < altura; y++) {  // y como linha
+        for (int x = 0; x < larg; x++) {  // x como coluna
+            if (y < 3) {
+                MatrizTerreno[y][x] = 0;  // Aqui y é linha e x é coluna
+            }
+            else if(y < 6){
+
+                // Gerar um número aleatório entre 0 e 100
+                int random = 0 + rand() % (100 - 0 + 1);
+
+                if(random > 30){
+                    MatrizTerreno[y][x] = 0;
+                }
+                else{
+                    MatrizTerreno[y][x] = 1;
+                }
+                std::cout<<random<< " ";
+            }
+            else if( y < 10){
+                int random = 0 + rand() % (100 - 0 + 1);
+
+                if(random > 30){
+                    MatrizTerreno[y][x] = 1;
+                }
+                else{
+                    MatrizTerreno[y][x] = 0;
+                }
+            }
+            else{
+
+                float valor = noise.GetNoise((float)x, (float)y);
+
+                // Aplica o limiar para definir se é uma parede ou um espaço vazio
+                if (valor > limiar) {
+                    MatrizTerreno[y][x] = -1;  // Espaço vazio
+                } else {
+                    MatrizTerreno[y][x] = 1;  // parede
+                }
+
+            }
+            //std::cout<<MatrizTerreno[y][x];
+        }
+        std::cout<<"\n";
+    }
+
     ponteiro->x = -320;
     ponteiro->y = -32;
     for(int i = 0; i<14 ;i++){
@@ -177,18 +227,23 @@ void Engine::gerarTerreno(){
 
     ponteiro->y = 280;
 
-    for(int y = 0; y< 10; y++){
+    for(int y = 0; y< altura; y++){
         ponteiro->x = -32;
         criarOjeto("Blocker",ponteiro->x,ponteiro->y);
-        for(int x = -1; x < 14; x++){
+        for(int x = 0; x < larg; x++){
             ponteiro->y = 215 + (64*y);
             ponteiro->x = 32 + (64*x);
-            criarOjeto("terra",ponteiro->x,ponteiro->y);
+            if(MatrizTerreno[y][x] == 0){
+                criarOjeto("terra",ponteiro->x,ponteiro->y);
+            }if(MatrizTerreno[y][x] == 1){
+                criarOjeto("pedra",ponteiro->x,ponteiro->y);
+            }
 
         }
         ponteiro->x = 832;
         criarOjeto("Blocker",ponteiro->x,ponteiro->y);
     }
+    
 }
 
 //função que junta tudo para rodar
@@ -218,7 +273,7 @@ void Engine::run()
 
 
 
-void Engine::criaRetangulo(float x, float y, float w, float h, bool dinamico){
+b2Body* Engine::criaRetangulo(float x, float y, float w, float h, bool dinamico){
 
     //bodydef
     b2BodyDef bdef;
@@ -233,6 +288,8 @@ void Engine::criaRetangulo(float x, float y, float w, float h, bool dinamico){
     //fixturedef
     b2FixtureDef fdef;
     b2PolygonShape pshape;
+    fdef.density = 10;
+
 
     pshape.SetAsBox(0.5f * h * PPM, 0.5f * w * PPM) ;
     fdef.shape = &pshape;
@@ -240,6 +297,7 @@ void Engine::criaRetangulo(float x, float y, float w, float h, bool dinamico){
     //body
     b2Body* body = mundo->CreateBody(&bdef) ;
     body->CreateFixture(&fdef);
+    return body;
 
 }
 
@@ -271,15 +329,15 @@ b2Body* Engine::criarPoligono(std::string tipo, bool dinamico, int x, int y) {
                     float y = std::stof(coordenadas[i + 1]);
                     x *= PPM;
                     y *= PPM;
-                    std::cout << "(" << x << ", " << y << ") ";
+                    //std::cout << "(" << x << ", " << y << ") ";
                     vertices.push_back(b2Vec2(x, y));
                 }
 
                 std::cout << "vertices extraidos: ";
                 for (const auto& v : vertices) {
-                    std::cout << "(" << v.x << ", " << v.y << ") ";
+                    //std::cout << "(" << v.x << ", " << v.y << ") ";
                 }
-                std::cout << "\n";
+                //std::cout << "\n";
                 
                 // Verificar se há pelo menos 3 vértices
                 if (vertices.size() < 3) {
@@ -335,7 +393,8 @@ void Engine::criarOjeto(std::string tipo,float x, float y){
         OBJ->ID = index + 1;
         OBJ->bodyIndex = OBJ->ID -1;
 
-        OBJ->body = criarPoligono(tipo,false,x,y);
+        //OBJ->body = criarPoligono(tipo,false,x,y);
+        OBJ->body = criaRetangulo(x,y,64,64,false);
 
 
         index++;
@@ -353,8 +412,26 @@ void Engine::criarOjeto(std::string tipo,float x, float y){
         OBJ->ID = index + 1;
         OBJ->bodyIndex = OBJ->ID -1;
 
-        OBJ->body = criarPoligono(tipo,false,x,y);
+        //OBJ->body = criarPoligono(tipo,false,x,y);
+        OBJ->body = criaRetangulo(x,y,64,64,false);
 
+        index++;
+        objetos.push_back(OBJ);
+    }
+    else if (tipo == "pedra")
+    {
+        std::shared_ptr<Objeto> OBJ;
+        sf::Vector2f pos(x,y);
+        OBJ = std::make_shared<Objeto>(pos);
+
+        OBJ->tipo = tipo;
+        OBJ->objTexture.loadFromFile("./recursos/textures/objects/sprite/pedra.png");
+        OBJ->objSprite->setTexture(OBJ->objTexture);
+        OBJ->ID = index + 1;
+        OBJ->bodyIndex = OBJ->ID -1;
+
+        //OBJ->body = criarPoligono(tipo,false,x,y);
+        OBJ->body = criaRetangulo(x,y,64,64,false);
 
         index++;
         objetos.push_back(OBJ);
@@ -384,3 +461,5 @@ void Engine::drawPolygon(const b2PolygonShape& shape, const b2Body* body) {
     // Desenha o contorno na janela sem adicionar o primeiro vértice novamente
     janela->draw(outline);
 }
+
+

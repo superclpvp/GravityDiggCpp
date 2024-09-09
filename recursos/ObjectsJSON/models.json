@@ -6,8 +6,8 @@
 					"anchorpoint": "0.5000,0.5000",
 					"fixtures": {
 						"fixture": {
-							"density": "2",
-							"friction": "1",
+							"density": "10",
+							"friction": "0.5",
 							"restitution": "1",
 							"filter_categoryBits": "1",
 							"filter_groupIndex": "0",
@@ -60,6 +60,24 @@
 						}
 					},
 					"_name": "Blocker"
+				},
+				{
+					"anchorpoint": "0.5000,0.5000",
+					"fixtures": {
+						"fixture": {
+							"density": "2",
+							"friction": "0",
+							"restitution": "0",
+							"filter_categoryBits": "1",
+							"filter_groupIndex": "0",
+							"filter_maskBits": "65535",
+							"fixture_type": "POLYGON",
+							"polygons": {
+								"polygon": "-32.0000, 32.0000  ,  -32.0000, -32.0000  ,  32.0000, -32.0000  ,  32.0000, 32.0000"
+							}
+						}
+					},
+					"_name": "pedra"
 				}
 			]
 		},
