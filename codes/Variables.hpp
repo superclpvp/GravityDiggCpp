@@ -15,17 +15,50 @@
 #include <fstream>
 #include <sstream>
 #include "lib/noise/FastNoiseLite.h"
+#include <utility>
+#include <set>
+
+
+
+class MeuContactListener : public b2ContactListener {
+public:
+    std::set<std::pair<b2Body*, b2Body*>> contatosAtuais;
+
+    void BeginContact(b2Contact* contact) override {
+        b2Body* bodyA = contact->GetFixtureA()->GetBody();
+        b2Body* bodyB = contact->GetFixtureB()->GetBody();
+        contatosAtuais.insert({bodyA, bodyB});
+        
+        
+    }   
+
+    void EndContact(b2Contact* contact) override {
+        b2Body* bodyA = contact->GetFixtureA()->GetBody();
+        b2Body* bodyB = contact->GetFixtureB()->GetBody();
+        contatosAtuais.erase({bodyA, bodyB});
+    }
+
+    bool ChecarColisao(b2Body* bodyA, b2Body* bodyB) {
+        return contatosAtuais.find({bodyA, bodyB}) != contatosAtuais.end();
+    }
+
+};
+
 
 class Objeto{
 public:
 
     sf::Vector2f ObjPOS;
     std::string tipo;
+    float Vida;
+    float Dano;
     int bodyIndex;
     int ID;
     sf::Texture objTexture;
     std::shared_ptr<sf::Sprite> objSprite;
     b2Body* body;
+    bool destruir = false;
+    std::string grupo;
     /**/
     Objeto(sf::Vector2f p): ObjPOS(p){
         objSprite = std::make_shared<sf::Sprite>();
@@ -58,9 +91,11 @@ public:
     bool tecla = false;
     bool minerar = false;
     float maxDown = 46000;
+    float cameraDesc = 0;
     int altura = 150;
     int larg = 15;
     int seed = 2850192;
+    bool travarCamera = false;
 
     std::vector<std::vector<int>> MatrizTerreno;
 
@@ -74,6 +109,7 @@ public:
     float MPP = 1/PPM;
     float pi = 3.14159265;
     bool desenharFisica =false;
+    MeuContactListener meuContactListener;
 
     int index = 0;
     /* #endregion */
@@ -90,9 +126,16 @@ public:
     void gerarTerreno();
     void drawPolygon(const b2PolygonShape& shape, const b2Body* body);
     void aumentarMapa(int tamanho);
+    void destruirObjetos();
 
     //b2BodyDef createModel(std::string tipo,bool estaticoDinamico = false,float x , float y);
     /* #endregion*/
+
+
+
+
+
+
 
 };
 

@@ -36,6 +36,7 @@ Engine::Engine()
     janela->setFramerateLimit(90);
     camera.setSize(sf::Vector2f(janela->getSize()));
     camera.setCenter(400,300);
+    cameraDesc = camera.getCenter().y;
     janela->setView(camera);
     /*#endregion*/
 
@@ -50,6 +51,9 @@ Engine::Engine()
     mundo = std::make_shared<b2World>(grav);
     /*#endregion*/
     MatrizTerreno =  std::vector<std::vector<int>>(altura, std::vector<int>(larg, 0));
+    
+
+    mundo->SetContactListener(&meuContactListener);
 
 }
 
@@ -130,6 +134,13 @@ void Engine::events() {
         else if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::F && desenharFisica) {
             desenharFisica = false;
         }
+
+        if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::C && !travarCamera) {
+            travarCamera = true;
+        }
+        else if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::C && travarCamera) {
+            travarCamera = false;
+        }
         
     }
 }
@@ -148,9 +159,47 @@ void Engine::EngineRUN() {
         sf::Vector2f posP(pos.x * MPP, pos.y * MPP);
         obj->objSprite->setPosition(posP);
 
-        
-    }
+        std::vector<int> idsParaRemover;
 
+        //colisão da pa no bloco
+        if(obj->tipo == "pa_1"){
+            for (const auto& contato : meuContactListener.contatosAtuais) {
+                if (contato.first == obj->body && obj->tipo == "pa_1") {
+                    for (auto obj2 : objetos) {
+                        if (obj2->body == contato.second) {
+                            if (obj2->grupo == "destruitivel") {
+                                obj2->Vida -= obj->Dano;
+                                std::cout<< "-1" <<"\n";
+                            }
+                        }
+                    }
+                } else if (contato.second == obj->body && obj->tipo == "pa_1") {
+                    for (auto obj2 : objetos) {
+                        if (obj2->body == contato.first) {
+                            if (obj2->grupo == "destruitivel") {
+                                obj2->Vida -= obj->Dano;
+                                std::cout<< "-1" <<"\n";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        //camera do jogo "vai da merda isso aq"
+        if(travarCamera && obj->objSprite->getPosition().y > camera.getCenter().y && obj->tipo == "pa_1" &&  obj->objSprite->getPosition().y > 620 ){
+            if(obj->objSprite->getPosition().y > cameraDesc){
+                cameraDesc = obj->objSprite->getPosition().y - 200;
+                camera.move(0,cameraDesc - camera.getCenter().y);
+                janela->setView(camera);
+                cameraDesc = camera.getCenter().y;
+            }
+        }
+    
+    
+    }
+    destruirObjetos();
     mundo->Step(deltaTime, 1,1);
 
 }
@@ -208,7 +257,7 @@ void Engine::gerarTerreno(){
             }
             //std::cout<<MatrizTerreno[y][x];
         }
-        std::cout<<"\n";
+        //std::cout<<"\n";
     }
 
     ponteiro->x = -320;
@@ -371,6 +420,8 @@ void Engine::criarOjeto(std::string tipo,float x, float y){
         OBJ = std::make_shared<Objeto>(pos);
 
         OBJ->tipo = tipo;
+        OBJ->Vida = 10;
+        OBJ->Dano = 1;
         OBJ->objTexture.loadFromFile("./recursos/textures/objects/sprite/pa_1.png");
         OBJ->objSprite->setTexture(OBJ->objTexture);
         OBJ->ID = index + 1;
@@ -381,6 +432,7 @@ void Engine::criarOjeto(std::string tipo,float x, float y){
         index++;
         objetos.push_back(OBJ);
     }
+
     else if (tipo == "terra")
     {
         std::shared_ptr<Objeto> OBJ;
@@ -388,6 +440,8 @@ void Engine::criarOjeto(std::string tipo,float x, float y){
         OBJ = std::make_shared<Objeto>(pos);
 
         OBJ->tipo = tipo;
+        OBJ->Vida = 3;
+        OBJ->grupo = "destruitivel";
         OBJ->objTexture.loadFromFile("./recursos/textures/objects/sprite/terra.png");
         OBJ->objSprite->setTexture(OBJ->objTexture);
         OBJ->ID = index + 1;
@@ -400,6 +454,7 @@ void Engine::criarOjeto(std::string tipo,float x, float y){
         index++;
         objetos.push_back(OBJ);
     }
+
     else if (tipo == "Blocker")
     {
         std::shared_ptr<Objeto> OBJ;
@@ -418,6 +473,7 @@ void Engine::criarOjeto(std::string tipo,float x, float y){
         index++;
         objetos.push_back(OBJ);
     }
+
     else if (tipo == "pedra")
     {
         std::shared_ptr<Objeto> OBJ;
@@ -425,6 +481,8 @@ void Engine::criarOjeto(std::string tipo,float x, float y){
         OBJ = std::make_shared<Objeto>(pos);
 
         OBJ->tipo = tipo;
+        OBJ->Vida = 10;
+        OBJ->grupo = "destruitivel";
         OBJ->objTexture.loadFromFile("./recursos/textures/objects/sprite/pedra.png");
         OBJ->objSprite->setTexture(OBJ->objTexture);
         OBJ->ID = index + 1;
@@ -462,4 +520,45 @@ void Engine::drawPolygon(const b2PolygonShape& shape, const b2Body* body) {
     janela->draw(outline);
 }
 
+void Engine::destruirObjetos() {
+    // Encontre o objeto com o ID especificado
 
+    
+    
+    for(auto obj : objetos){
+        if(obj->Vida <= 0 && obj->grupo == "destruitivel"){
+            int id = obj->ID;
+            auto it = std::find_if(objetos.begin(), objetos.end(), [id](const std::shared_ptr<Objeto>& obj) {
+                return obj->ID == id;
+            });
+
+            if (obj->body) {
+                mundo->DestroyBody(obj->body);
+            }
+
+            objetos.erase(it);
+            break;
+
+
+        }
+        
+        
+        
+        //Se destruir verdadeiro
+        if(obj->destruir == true){
+            
+            int id = obj->ID;
+            auto it = std::find_if(objetos.begin(), objetos.end(), [id](const std::shared_ptr<Objeto>& obj) {
+                return obj->ID == id;
+            });
+
+            if (obj->body) {
+                mundo->DestroyBody(obj->body);
+            }
+
+            objetos.erase(it);
+            break;
+        }
+    }
+
+}
