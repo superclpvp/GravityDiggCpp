@@ -15,6 +15,7 @@
 
 #include "Variables.hpp"
 #include "box2d/box2d.h"
+
 std::vector<std::string> split(const std::string& str, char delim) {
     std::vector<std::string> tokens;
     std::string token;
@@ -94,19 +95,20 @@ void Engine::events() {
     sf::Event evento;
 
     while (janela->pollEvent(evento)) {
+      
         if (evento.type == sf::Event::Closed) {
             janela->close();
         }
 
-        if (evento.type == sf::Event::MouseWheelScrolled) {
+        if (evento.type == sf::Event::MouseWheelScrolled or evento.type == sf::Event::KeyPressed ) {
             std::cout << "Scroll";
             sf::Vector2f cameraPos = camera.getCenter();
-            if (evento.mouseWheelScroll.delta > 0) {
+            if (evento.mouseWheelScroll.delta > 0 or evento.key.code == sf::Keyboard::W) {
                 std::cout << "Scroll Up\n";
                 if (cameraPos.y > 300) {
                     camera.move(0, -scrollSpeed);
                 }
-            } else if (evento.mouseWheelScroll.delta < 0) {
+            } else if (evento.mouseWheelScroll.delta < 0 or evento.key.code == sf::Keyboard::S) {
                 std::cout << "Scroll Down\n";
                 if (cameraPos.y < maxDown) {
                     camera.move(0, scrollSpeed);
@@ -115,6 +117,7 @@ void Engine::events() {
             janela->setView(camera);
             std::cout<<"pos " << cameraPos.y  <<"\n"; 
         }
+
         if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::Left) {
             camera.move(32,0);
             janela->setView(camera);
@@ -126,8 +129,10 @@ void Engine::events() {
 
         if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::A) {
             criarOjeto("pa_1", 100, 100);
+            std::srand(static_cast<unsigned>(std::time(0)));
             std::cout << "A\n";
         }
+        
         if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::F && !desenharFisica) {
             desenharFisica = true;
         }
@@ -142,12 +147,91 @@ void Engine::events() {
             travarCamera = false;
         }
         
+        if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::Space && !iniciarFisica) {
+            iniciarFisica = true;
+        }
+        else if (evento.type == sf::Event::KeyPressed && evento.key.code == sf::Keyboard::Space && iniciarFisica) {
+            iniciarFisica = false;
+        }
+    
+        if (evento.type == sf::Event::MouseButtonPressed && !iniciarFisica) {
+            if (evento.mouseButton.button == sf::Mouse::Left) {
+                sf::Vector2i posicaoMouse = sf::Mouse::getPosition(*janela);
+                sf::Vector2f posMouseF = janela->mapPixelToCoords(posicaoMouse);
+
+                // Verifica se o clique está em algum minerador
+                for (auto& obj : objetos) {
+                    if (obj->objSprite->getGlobalBounds().contains(posMouseF) && obj->grupo == "minerador") {
+                        obj->arrastandoMinerador = true;
+                        obj->posicaoInicialArraste = posMouseF - obj->objSprite->getPosition();
+                        break;
+                    }
+                }
+            }
+        }
+        if (evento.type == sf::Event::MouseButtonReleased && !iniciarFisica) {
+            for (auto& obj : objetos ) {
+                if (evento.mouseButton.button == sf::Mouse::Left && obj->grupo == "minerador") {
+                    obj->arrastandoMinerador = false;
+                    std::cout<<"clique"<<"\n";
+                    //break;
+                }
+            }
+        }
+        if (evento.type == sf::Event::MouseMoved && !iniciarFisica) {
+            for (auto& obj : objetos) {
+                if (obj->arrastandoMinerador && obj->grupo == "minerador") {
+                    
+                    sf::Vector2i posicaoMouse = sf::Mouse::getPosition(*janela);
+                    sf::Vector2f posMouseF = janela->mapPixelToCoords(posicaoMouse);
+
+                    // Calcula a nova posição do minerador
+                    sf::Vector2f novaPosicao = posMouseF - obj->posicaoInicialArraste;
+
+                    // Cria um retângulo temporário que representa a nova posição do minerador
+                    sf::FloatRect boundsMinerador = obj->objSprite->getGlobalBounds();
+
+                    sf::Vector2f tamanhoSprite(boundsMinerador.width, boundsMinerador.height);
+
+                    // Centraliza o bounds no novo centro (novaPosicao)
+                    boundsMinerador.left = novaPosicao.x - tamanhoSprite.x / 2.0f;
+                    boundsMinerador.top = novaPosicao.y - tamanhoSprite.y / 2.0f;
+
+                    bool podeMover = true; // Variável para indicar se o minerador pode se mover
+
+                    // Verifica colisão com todos os objetos do grupo "quebraveis"
+                    for (auto& objQuebravel : objetos) {
+                        if (objQuebravel->grupo == "destruitivel") {
+                            // Obtém os limites do sprite do objeto quebrável
+                            sf::FloatRect boundsQuebravel = objQuebravel->objSprite->getGlobalBounds();
+
+                            // Verifica se os limites do minerador estão colidindo com o objeto quebrável
+                            if (boundsMinerador.intersects(boundsQuebravel)) {
+                                podeMover = false; // Se houver colisão, não pode mover
+                                break; // Não precisa continuar verificando, já achou uma colisão
+                            }
+                        }
+                    }
+
+                    // Se não houver colisão, atualiza a posição
+                    if (podeMover) {
+                        // Atualiza a posição do sprite
+                        obj->objSprite->setPosition(novaPosicao);
+
+                        // Atualiza a posição do corpo Box2D
+                        obj->body->SetTransform(b2Vec2(novaPosicao.x * PPM, novaPosicao.y * PPM), obj->body->GetAngle());
+                    }
+                }
+            }
+        }
+        
     }
 }
 
 //Fisica e afins
 void Engine::EngineRUN() {
-
+    
+    
     for(auto obj : objetos) {
         
         b2Vec2 pos = obj->body->GetPosition();
@@ -169,7 +253,7 @@ void Engine::EngineRUN() {
                         if (obj2->body == contato.second) {
                             if (obj2->grupo == "destruitivel") {
                                 obj2->Vida -= obj->Dano;
-                                std::cout<< "-1" <<"\n";
+                                //std::cout<< "-1" <<"\n";
                             }
                         }
                     }
@@ -178,7 +262,7 @@ void Engine::EngineRUN() {
                         if (obj2->body == contato.first) {
                             if (obj2->grupo == "destruitivel") {
                                 obj2->Vida -= obj->Dano;
-                                std::cout<< "-1" <<"\n";
+                                //std::cout<< "-1" <<"\n";
                             }
                         }
                     }
@@ -199,53 +283,56 @@ void Engine::EngineRUN() {
     
     
     }
-    destruirObjetos();
-    mundo->Step(deltaTime, 1,1);
+    if (iniciarFisica){
+        destruirObjetos();
+        mundo->Step(deltaTime, 10,8);
+    }
 
 }
 
 //gerar o terreno base
-void Engine::gerarTerreno(){
+
+void Engine::gerarTerreno() {
     std::shared_ptr<sf::Vector2f> ponteiro = std::make_shared<sf::Vector2f>();
-    srand(static_cast<unsigned>(time(0))); 
     float limiar = 0.1f;
     FastNoiseLite noise;
     noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
     noise.SetFrequency(0.1f);
     noise.SetSeed(seed);
 
+    // Inicializa o gerador de números aleatórios com uma semente fixa
+    std::mt19937 gen(seed);  // Use a semente fornecida
+    std::uniform_int_distribution<> dis(0, 100);
 
     for (int y = 0; y < altura; y++) {  // y como linha
         for (int x = 0; x < larg; x++) {  // x como coluna
             if (y < 3) {
                 MatrizTerreno[y][x] = 0;  // Aqui y é linha e x é coluna
             }
-            else if(y < 6){
-
+            else if (y < 6) {
                 // Gerar um número aleatório entre 0 e 100
-                int random = 0 + rand() % (100 - 0 + 1);
+                int random = dis(gen);
 
-                if(random > 30){
+                if (random > 30) {
                     MatrizTerreno[y][x] = 0;
                 }
-                else{
+                else {
                     MatrizTerreno[y][x] = 1;
                 }
-                std::cout<<random<< " ";
+                std::cout << random << " ";
             }
-            else if( y < 10){
-                int random = 0 + rand() % (100 - 0 + 1);
+            else if (y < 10) {
+                int random = dis(gen);
 
-                if(random > 30){
+                if (random > 30) {
                     MatrizTerreno[y][x] = 1;
                 }
-                else{
+                else {
                     MatrizTerreno[y][x] = 0;
                 }
             }
-            else{
-
-                float valor = noise.GetNoise((float)x, (float)y);
+            else {
+                float valor = noise.GetNoise(static_cast<float>(x), static_cast<float>(y));
 
                 // Aplica o limiar para definir se é uma parede ou um espaço vazio
                 if (valor > limiar) {
@@ -253,46 +340,43 @@ void Engine::gerarTerreno(){
                 } else {
                     MatrizTerreno[y][x] = 1;  // parede
                 }
-
             }
-            //std::cout<<MatrizTerreno[y][x];
+            //std::cout << MatrizTerreno[y][x];
         }
-        //std::cout<<"\n";
+        //std::cout << "\n";
     }
 
     ponteiro->x = -320;
     ponteiro->y = -32;
-    for(int i = 0; i<14 ;i++){
-        ponteiro->x = 32 + (64*i);
-        criarOjeto("Blocker",ponteiro->x,ponteiro->y);
+    for (int i = 0; i < 14; i++) {
+        ponteiro->x = 32 + (64 * i);
+        criarOjeto("Blocker", ponteiro->x, ponteiro->y);
     }
-    for(int y = 0; y< 10; y++){
+    for (int y = 0; y < 10; y++) {
         ponteiro->x = -32;
-        criarOjeto("Blocker",ponteiro->x,ponteiro->y);
+        criarOjeto("Blocker", ponteiro->x, ponteiro->y);
         ponteiro->x = 832;
-        criarOjeto("Blocker",ponteiro->x,ponteiro->y);
-        ponteiro->y = 0 + (64*y);
+        criarOjeto("Blocker", ponteiro->x, ponteiro->y);
+        ponteiro->y = 0 + (64 * y);
     }
 
     ponteiro->y = 280;
 
-    for(int y = 0; y< altura; y++){
+    for (int y = 0; y < altura; y++) {
         ponteiro->x = -32;
-        criarOjeto("Blocker",ponteiro->x,ponteiro->y);
-        for(int x = 0; x < larg; x++){
-            ponteiro->y = 215 + (64*y);
-            ponteiro->x = 32 + (64*x);
-            if(MatrizTerreno[y][x] == 0){
-                criarOjeto("terra",ponteiro->x,ponteiro->y);
-            }if(MatrizTerreno[y][x] == 1){
-                criarOjeto("pedra",ponteiro->x,ponteiro->y);
+        criarOjeto("Blocker", ponteiro->x, ponteiro->y);
+        for (int x = 0; x < larg; x++) {
+            ponteiro->y = 215 + (64 * y);
+            ponteiro->x = 32 + (64 * x);
+            if (MatrizTerreno[y][x] == 0) {
+                criarOjeto("terra", ponteiro->x, ponteiro->y);
+            } if (MatrizTerreno[y][x] == 1) {
+                criarOjeto("pedra", ponteiro->x, ponteiro->y);
             }
-
         }
         ponteiro->x = 832;
-        criarOjeto("Blocker",ponteiro->x,ponteiro->y);
+        criarOjeto("Blocker", ponteiro->x, ponteiro->y);
     }
-    
 }
 
 //função que junta tudo para rodar
@@ -342,7 +426,8 @@ b2Body* Engine::criaRetangulo(float x, float y, float w, float h, bool dinamico)
 
     pshape.SetAsBox(0.5f * h * PPM, 0.5f * w * PPM) ;
     fdef.shape = &pshape;
-
+    fdef.filter.categoryBits = 0x0002;
+    fdef.filter.maskBits = 0x0001;
     //body
     b2Body* body = mundo->CreateBody(&bdef) ;
     body->CreateFixture(&fdef);
@@ -400,6 +485,8 @@ b2Body* Engine::criarPoligono(std::string tipo, bool dinamico, int x, int y) {
 
                 b2FixtureDef fixtureDef;
                 fixtureDef.shape = &polygonShape;
+                fixtureDef.filter.categoryBits = 0x0001;
+                fixtureDef.filter.maskBits = 0x0002;
                 fixtureDef.density = std::stof(bodydata["fixtures"]["fixture"]["density"].get<std::string>());
                 fixtureDef.friction = std::stof(bodydata["fixtures"]["fixture"]["friction"].get<std::string>());
                 fixtureDef.restitution = std::stof(bodydata["fixtures"]["fixture"]["restitution"].get<std::string>());
@@ -414,20 +501,35 @@ b2Body* Engine::criarPoligono(std::string tipo, bool dinamico, int x, int y) {
 
 void Engine::criarOjeto(std::string tipo,float x, float y){
 
-    if (tipo == "pa_1"){
+    if (tipo == "pa_1") {
         std::shared_ptr<Objeto> OBJ;
-        sf::Vector2f pos(x,y);
+        sf::Vector2f pos(x, y);
         OBJ = std::make_shared<Objeto>(pos);
 
         OBJ->tipo = tipo;
+        OBJ->grupo = "minerador";
         OBJ->Vida = 10;
         OBJ->Dano = 1;
         OBJ->objTexture.loadFromFile("./recursos/textures/objects/sprite/pa_1.png");
         OBJ->objSprite->setTexture(OBJ->objTexture);
         OBJ->ID = index + 1;
-        OBJ->bodyIndex = OBJ->ID -1;
+        OBJ->bodyIndex = OBJ->ID - 1;
 
-        OBJ->body = criarPoligono(tipo,true,x,y);
+        // Inicializa o gerador com uma semente fixa
+        static std::mt19937 gen(12345); // Semente fixa para resultados consistentes
+        std::uniform_int_distribution<> disX(54, 738);
+        std::uniform_int_distribution<> disY(56, 169);
+
+        // Gera números aleatórios para x e y
+        int ax = disX(gen);
+        int ay = disY(gen);
+
+        // Imprime os valores aleatórios gerados
+        std::cout << "Valores aleatórios gerados - x: " << ax << ", y: " << ay << "\n";
+
+        // Cria o polígono com as coordenadas aleatórias
+        OBJ->body = criarPoligono(tipo, true, ax, ay);
+        OBJ->body->SetAngularVelocity(1);
 
         index++;
         objetos.push_back(OBJ);

@@ -59,6 +59,8 @@ public:
     b2Body* body;
     bool destruir = false;
     std::string grupo;
+    bool arrastandoMinerador = false;
+    sf::Vector2f posicaoInicialArraste;
     /**/
     Objeto(sf::Vector2f p): ObjPOS(p){
         objSprite = std::make_shared<sf::Sprite>();
@@ -92,14 +94,15 @@ public:
     bool minerar = false;
     float maxDown = 46000;
     float cameraDesc = 0;
-    int altura = 150;
+    int altura = 1000;
     int larg = 15;
-    int seed = 2850192;
+    int seed = 2222222;
     bool travarCamera = false;
 
     std::vector<std::vector<int>> MatrizTerreno;
 
     //fisica BOX2D
+    
     std::shared_ptr<b2World> mundo;
     sf::Clock clock;
     float deltaTime;
@@ -108,7 +111,8 @@ public:
     float PPM = 0.05;
     float MPP = 1/PPM;
     float pi = 3.14159265;
-    bool desenharFisica =false;
+    bool desenharFisica = false;
+    bool iniciarFisica = false;
     MeuContactListener meuContactListener;
 
     int index = 0;
